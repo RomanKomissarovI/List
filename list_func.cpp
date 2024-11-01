@@ -1,20 +1,23 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "list_func.h"
 
 void ListCtor(List* list)
-{
+{   
+    list->capacity = 5;
+    list->size = 0;
+
     list->list = (List_Elem*) calloc (list->capacity, sizeof(List_Elem));
     for (int i = 0; i < (int) list->capacity; ++i)
     {
-        list->list[i].ptr_next = &(list->list[i + 1]);
-        list->list[i].ptr_prev = &(list->list[i - 1]);
+        list->list[i].ptr_next = i + 1;
+        list->list[i].ptr_prev = i - 1;
         list->list[i].elem = 0;
     }
-    list->list[0].ptr_prev = nullptr;
-    list->list[list->capacity - 1].ptr_next = nullptr;
-    list->head = nullptr;
-    list->free = &(list->list[0]);
+    list->list[list->capacity - 1].ptr_next = -1;
+    list->head = -1;
+    list->free = 0;
 }
 
 void ListDtor(List* list)
@@ -22,69 +25,150 @@ void ListDtor(List* list)
     free(list->list);
     list->size = 0;
     list->capacity = 0;
-    list->free = nullptr;
-    list->head = nullptr;
+    list->free = -1;
+    list->head = -1;
 }
 
 void ListPush(List* list, list_t a, int ind)
 {
-    List_Elem* free_el = list->free;
-    //printf("\nnext: %p, prev: %p, free: %p\n\n", list->free->ptr_next, list->free->ptr_prev, list->free);
-    list->free = (list->free)->ptr_next;
-    //printf("\nfree: %p\n\n", list->free);
+    assert(list != nullptr);
 
-
-    (*free_el).elem = a;
-    if (list->head == nullptr)
+    if (list->size == list->capacity)
     {
-        (*free_el).ptr_next = nullptr;
-        (*free_el).ptr_prev = nullptr;
+        Recalloc(list, (size_t) (list->capacity * 1.4) + 10);
+    }
+
+    size_t free_el = list->free;
+    list->free = (list->list[list->free]).ptr_next;
+
+
+    (list->list[free_el]).elem = a;
+    if (list->head == -1)
+    {
+        (list->list[free_el]).ptr_next = -1;
+        (list->list[free_el]).ptr_prev = -1;
         list->head = free_el;
     }
     else
     {
         if (ind == -1)
         {
-            List_Elem* k = list->head;
-            while (k->ptr_next != nullptr)
+            size_t k = list->head;
+            while ((list->list[k]).ptr_next != -1)
             {
-                k = k->ptr_next;
+                k = (list->list[k]).ptr_next;
             }
 
-            (*free_el).ptr_next = nullptr;
-            (*free_el).ptr_prev = k;
-            k->ptr_next = free_el;
+            (list->list[free_el]).ptr_next = -1;
+            (list->list[free_el]).ptr_prev = k;
+            (list->list[k]).ptr_next = free_el;
         }
         else
         {
-            List_Elem* k = list->head;
+            size_t k = list->head;
             int ind_now = 0;
             while (ind_now != ind)
             {
-                k = k->ptr_next;
+                k = (list->list[k]).ptr_next;
                 ind_now++;
             }
 
-            (*free_el).ptr_next = k;
-            (*free_el).ptr_prev = k->ptr_prev;
-            (k->ptr_prev)->ptr_next = free_el;
-            k->ptr_prev = free_el;
-            //printf("prevvvvvv %d\n", (k->ptr_prev)->elem);
+            (list->list[free_el]).ptr_next = k;
+            (list->list[free_el]).ptr_prev = list->list[k].ptr_prev;
+            (list->list[(list->list[k]).ptr_prev]).ptr_next = free_el;
+            (list->list[k]).ptr_prev = free_el;
         }
     }
 
     list->size++;
-    //printf("size: %d, free: %p, head: %p\n", list->size, list->free, list->head);
-    //printf("h_ptr_next: %p, ptr_prev: %p, elem: %d", list->head->ptr_next, list->head->ptr_prev, list->head->elem);
+}
+
+void ListPop(List* list,  int ind)
+{
+    assert(list != nullptr);
+    if ((long long) list->size - 1 < (long long) ind)
+    {
+        printf("Error pop: _ind_ more than size of list\n");
+        return;
+    }
+
+    if (ind == -1)
+    {
+        size_t k = list->head;
+        while ((list->list[k]).ptr_next != -1)
+        {
+            k = (list->list[k]).ptr_next;
+        }
+
+        (list->list[(list->list[k]).ptr_prev]).ptr_next = -1;
+
+        (list->list[k]).ptr_next = list->free;
+        list->free = k;
+    }
+    else
+    {
+        size_t k = list->head;
+        int ind_now = 0;
+        while (ind_now != ind)
+        {
+            k = (list->list[k]).ptr_next;
+            ind_now++;
+        }
+
+        if (ind_now != 0)
+        {
+            (list->list[(list->list[k]).ptr_prev]).ptr_next = (list->list[k]).ptr_next;
+        }
+        else
+        {
+            list->head = (list->list[0]).ptr_next;
+        }
+        
+        if ((long long) ind_now != (long long) list->size - 1)
+        {
+            (list->list[(list->list[k]).ptr_next]).ptr_prev = (list->list[k]).ptr_prev;
+        }
+
+        (list->list[k]).ptr_next = list->free;
+        list->free = k;
+    }
+    
+    list->size--;
 }
 
 void ListPrint(List* list)
 {
-    List_Elem* k = list->head;
-    //printf("%p, size: %d\n", k, list->size);
+    size_t k = list->head;
     for(size_t i = 0; i < list->size; ++i)
     {
-        printf("%d ", k->elem);
-        k = k->ptr_next;
+        printf("%d ", (list->list[k]).elem);
+        k = (list->list[k]).ptr_next;
     }
+    printf("\n");
+}
+
+void Recalloc(List* list, size_t new_capacity)
+{
+    assert(list != nullptr);
+
+    List_Elem* l = list->list;
+    l = (List_Elem*) realloc(list->list, new_capacity * sizeof(List_Elem));
+    if (l == nullptr)
+    {
+        printf("Error recalloc memory\n");
+        return;
+    }
+
+    list->list = l;
+    list->capacity = new_capacity;
+    for(size_t i = list->size; i < list->capacity; ++i)
+    {
+        list->list[i].ptr_next = i + 1;
+        list->list[i].ptr_prev = i - 1;
+        list->list[i].elem = 0;
+    }
+    list->list[list->size].ptr_prev = -1;
+    list->list[list->capacity - 1].ptr_next = list->free;
+
+    list->free = list->size;
 }

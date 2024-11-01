@@ -6,17 +6,17 @@ typedef int list_t;
 struct List_Elem
 {
     list_t elem;
-    List_Elem* ptr_next;
-    List_Elem* ptr_prev;
+    int ptr_next;
+    int ptr_prev;
 };
 
 struct List
 {
     List_Elem* list;
-    List_Elem* head = nullptr;
-    List_Elem* free = nullptr;
-    size_t capacity = 1000;
-    size_t size = 0;
+    int head;
+    int free;
+    size_t capacity;
+    size_t size;
 };
 
 #endif // LIST_H
