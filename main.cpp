@@ -1,18 +1,16 @@
 #include <stdio.h>
 #include "list_func.h"
 /*
-ПРИ РЕАЛОКЕ У КАЖДОГО ЭЛЕМЕНТА NEXT_PTR И PREV_PTR ДОЛЖНЫ МЕНЯТЬСЯ
-*/
-int prost[1000];
-int size = 0;
+СДЕЛАТЬ 3 МАССИВА PTR_NEXT, PTR_PREV, ELEMS, СТРУКРУТУ LIST_ELEM УБРАТЬ*/
 
 int main()
 {
     List a;
     ListCtor(&a);
+    
     for(int i = 0; i < 1000; ++i)
     {
-        ListPush(&a, i, -1);
+        ListPushBack(&a, i);
     }
 
     ListPrint(&a);

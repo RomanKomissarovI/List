@@ -9,7 +9,11 @@ void ListDtor(List* list);
 
 void ListPush(List* list, list_t a, int ind);
 
+void ListPushBack(List* list, list_t a);
+
 void ListPop(List* list,  int ind);
+
+void ListPopBack(List* list);
 
 void ListPrint(List* list);
 

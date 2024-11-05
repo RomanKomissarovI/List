@@ -2,18 +2,13 @@
 #define LIST_H
 
 typedef int list_t;
-
-struct List_Elem
-{
-    list_t elem;
-    int ptr_next;
-    int ptr_prev;
-};
+const int init_capacity = 10;
 
 struct List
 {
-    List_Elem* list;
-    int head;
+    list_t* list;
+    int* ptr_next;
+    int* ptr_prev;
     int free;
     size_t capacity;
     size_t size;
